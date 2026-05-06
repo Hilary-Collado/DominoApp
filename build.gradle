@@ -30,6 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     developmentOnly 'com.vaadin:vaadin-dev'
     implementation 'com.vaadin:vaadin-spring-boot-starter'
+    implementation 'org.openpnp:opencv:4.9.0-0'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'

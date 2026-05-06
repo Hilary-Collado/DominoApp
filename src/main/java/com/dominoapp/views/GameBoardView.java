@@ -15,7 +15,7 @@ import com.vaadin.flow.router.Route;
 import java.util.ArrayList;
 import java.util.List;
 
-@Route(value = "" , layout = MainLayout.class)
+@Route(value = "", layout = MainLayout.class)
 @CssImport("./css/style.css")
 public class GameBoardView extends VerticalLayout {
 
@@ -26,6 +26,7 @@ public class GameBoardView extends VerticalLayout {
     private boolean playersSelectorOpen = false;
     private int selectedPlayers = 2;
     private HorizontalLayout topControlsLayout;
+    private VerticalLayout cameraControlsLayout;
 
     private Div playersGrid;
 
@@ -34,17 +35,17 @@ public class GameBoardView extends VerticalLayout {
 
     private final java.util.List<Playerstate> players = new java.util.ArrayList<>();
 
-    private static class Playerstate{
+    private static class Playerstate {
         String name;
         int gamesWon;
 
         List<Integer> rounds = new ArrayList<>();
 
-        Playerstate(String name){
+        Playerstate(String name) {
             this.name = name;
         }
 
-        int totalScore(){
+        int totalScore() {
             return rounds.stream().mapToInt(Integer::intValue).sum();
         }
     }
@@ -61,6 +62,7 @@ public class GameBoardView extends VerticalLayout {
                 .set("box-sizing", "border-box");
         add(
                 topControls(),
+//                cameraControls(),
                 playersGrid(),
                 bottomBar()
         );
@@ -92,11 +94,7 @@ public class GameBoardView extends VerticalLayout {
         Button settings = new Button("⚙");
         styleIconButton(settings);
 
-//        Button players = new Button("👥 4");
-//        styleDarkButton(players);
-
         layout.add(settings);
-//        layout.add(settings, players);
         return layout;
     }
 
@@ -141,22 +139,23 @@ public class GameBoardView extends VerticalLayout {
                 .set("padding", "6px 28px")
                 .set("cursor", "pointer");
 
-
-//        Button camera = new Button("📷 Cámara");
-//        camera.getStyle()
-//                .set("background", "#ffffff")
-//                .set("color", "#000")
-//                .set("border-radius", "14px")
-//                .set("font-weight", "700")
-//                .set("font-size", "18px")
-//                .set("padding", "8px 16px")
-//                .set("cursor", "pointer");
-
         layout.add(history, restart);
         return layout;
     }
 
-    private HorizontalLayout topControls() {
+    private VerticalLayout topControls() {
+        VerticalLayout wrapper = new VerticalLayout();
+        wrapper.setWidthFull();
+        wrapper.setPadding(false);
+        wrapper.setSpacing(false);
+        wrapper.setAlignItems(Alignment.CENTER);
+
+        wrapper.getStyle()
+                .set("margin-top", "18px")
+                .set("margin-bottom", "80px");
+
+        Button camera = cameraButton();
+
         topControlsLayout = new HorizontalLayout();
         topControlsLayout.setWidthFull();
         topControlsLayout.setAlignItems(Alignment.CENTER);
@@ -164,12 +163,14 @@ public class GameBoardView extends VerticalLayout {
 
         topControlsLayout.getStyle()
                 .set("margin-top", "18px")
-                .set("margin-bottom", "24px")
-                .set("gap", "12px");
+                .set("padding", "0 62px")
+                .set("box-sizing", "border-box");
 
         refreshTopControls();
 
-        return topControlsLayout;
+        wrapper.add(camera, topControlsLayout);
+
+        return wrapper;
     }
 
     private VerticalLayout playerCard(Playerstate player) {
@@ -211,7 +212,7 @@ public class GameBoardView extends VerticalLayout {
         Button add = new Button("+");
 
         add.addClickListener(event -> {
-            if(!gameFinished){
+            if (!gameFinished) {
                 openAddPointsDialog(player);
             }
         });
@@ -343,15 +344,13 @@ public class GameBoardView extends VerticalLayout {
                 playersSelector.add(button);
             }
         }
-
-        topControlsLayout.add(targetSelectorLayout, playersSelector, cameraButton());
-//        topControlsLayout.add(targetSelectorLayout, playersSelector);
+        topControlsLayout.add(targetSelectorLayout, playersSelector);
     }
 
-    private void refreshTargetSelector(){
+    private void refreshTargetSelector() {
         targetSelectorLayout.removeAll();
 
-        if(!targetSelectorOpen){
+        if (!targetSelectorOpen) {
             Button selected = new Button(selectedTarget + " >");
             styleDarkButton(selected);
 
@@ -368,11 +367,11 @@ public class GameBoardView extends VerticalLayout {
 
         int[] targets = {50, 100, 120, 200};
 
-        for(int target : targets){
+        for (int target : targets) {
             Button button = new Button(String.valueOf(target));
             styleDarkButton(button);
 
-            if (target == selectedTarget){
+            if (target == selectedTarget) {
                 button.getStyle().set("background", "#ffffff").set("color", "#111111");
             }
 
@@ -412,7 +411,7 @@ public class GameBoardView extends VerticalLayout {
         }
     }
 
-    private void openCustomTargetDialog(){
+    private void openCustomTargetDialog() {
         com.vaadin.flow.component.dialog.Dialog dialog = new com.vaadin.flow.component.dialog.Dialog();
 
         VerticalLayout content = new VerticalLayout();
@@ -656,51 +655,51 @@ public class GameBoardView extends VerticalLayout {
 
     private void launchConfetti() {
         getElement().executeJs("""
-        const colors = ['#ff0000', '#00c853', '#2962ff', '#ffd600', '#ff6d00', '#aa00ff'];
-        const confettiCount = 120;
-
-        for (let i = 0; i < confettiCount; i++) {
-            const confetti = document.createElement('div');
-
-            confetti.style.position = 'fixed';
-            confetti.style.top = '-20px';
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.width = '10px';
-            confetti.style.height = '16px';
-            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.zIndex = '99999';
-            confetti.style.opacity = '0.9';
-            confetti.style.borderRadius = '2px';
-            confetti.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
-            confetti.style.pointerEvents = 'none';
-
-            document.body.appendChild(confetti);
-
-            const fallDuration = 2500 + Math.random() * 2000;
-            const horizontalMove = (Math.random() - 0.5) * 300;
-
-            confetti.animate([
-                {
-                    transform: 'translate(0, 0) rotate(0deg)',
-                    opacity: 1
-                },
-                {
-                    transform: 'translate(' + horizontalMove + 'px, 110vh) rotate(720deg)',
-                    opacity: 0
-                }
-            ], {
-                duration: fallDuration,
-                easing: 'cubic-bezier(.2,.7,.4,1)'
-            });
-
-            setTimeout(() => {
-                confetti.remove();
-            }, fallDuration);
-        }
-    """);
+                    const colors = ['#ff0000', '#00c853', '#2962ff', '#ffd600', '#ff6d00', '#aa00ff'];
+                    const confettiCount = 120;
+                
+                    for (let i = 0; i < confettiCount; i++) {
+                        const confetti = document.createElement('div');
+                
+                        confetti.style.position = 'fixed';
+                        confetti.style.top = '-20px';
+                        confetti.style.left = Math.random() * 100 + 'vw';
+                        confetti.style.width = '10px';
+                        confetti.style.height = '16px';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.zIndex = '99999';
+                        confetti.style.opacity = '0.9';
+                        confetti.style.borderRadius = '2px';
+                        confetti.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+                        confetti.style.pointerEvents = 'none';
+                
+                        document.body.appendChild(confetti);
+                
+                        const fallDuration = 2500 + Math.random() * 2000;
+                        const horizontalMove = (Math.random() - 0.5) * 300;
+                
+                        confetti.animate([
+                            {
+                                transform: 'translate(0, 0) rotate(0deg)',
+                                opacity: 1
+                            },
+                            {
+                                transform: 'translate(' + horizontalMove + 'px, 110vh) rotate(720deg)',
+                                opacity: 0
+                            }
+                        ], {
+                            duration: fallDuration,
+                            easing: 'cubic-bezier(.2,.7,.4,1)'
+                        });
+                
+                        setTimeout(() => {
+                            confetti.remove();
+                        }, fallDuration);
+                    }
+                """);
     }
 
-    private Button cameraButton(){
+    private Button cameraButton() {
         Button camera = new Button("📷 Cámara");
         camera.getStyle()
                 .set("background", "#ffffff")
@@ -708,7 +707,7 @@ public class GameBoardView extends VerticalLayout {
                 .set("border-radius", "14px")
                 .set("font-weight", "700")
                 .set("font-size", "18px")
-                .set("padding", "8px 16px")
+                .set("padding", "8px 22px")
                 .set("cursor", "pointer")
                 .set("box-shadow", "0 4px 12px rgba(0,0,0,0.18)");
 
@@ -719,7 +718,7 @@ public class GameBoardView extends VerticalLayout {
 
     private void openCameraDialog() {
         Dialog dialog = new Dialog();
-        dialog.setWidth("420px");
+        dialog.setWidth("430px");
         dialog.setMaxWidth("95vw");
 
         VerticalLayout content = new VerticalLayout();
@@ -728,65 +727,132 @@ public class GameBoardView extends VerticalLayout {
         content.setWidthFull();
 
         Div cameraBox = new Div();
-        cameraBox.setId("camera-box");
+        cameraBox.setWidthFull();
 
         cameraBox.getElement().setProperty(
                 "innerHTML",
                 """
-                <video id="camera-video" autoplay playsinline 
-                    style="width:100%; border-radius:14px; background:#000;"></video>
-                """
+                        <video id="camera-video" autoplay playsinline 
+                            style="width:100%; border-radius:14px; background:#000;"></video>
+                        
+                        <canvas id="camera-canvas" 
+                            style="display:none;"></canvas>
+                        
+                        <img id="camera-preview" 
+                            style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+                        """
         );
 
-        Button close = new Button("Cerrar", event -> {
-            dialog.close();
-        });
+        Span result = new Span("Toma una foto para analizar la jugada.");
+        result.getStyle()
+                .set("font-weight", "700")
+                .set("color", "#333");
 
-        close.setWidthFull();
-        close.getStyle()
+        Button takePhoto = new Button("📸 Tomar foto");
+        takePhoto.setWidthFull();
+        takePhoto.getStyle()
                 .set("background", "#101820")
                 .set("color", "#fff")
-                .set("border-radius", "10px");
+                .set("border-radius", "10px")
+                .set("font-weight", "800");
 
-        content.add(cameraBox, close);
+        takePhoto.addClickListener(event -> {
+            getElement().executeJs("""
+                        const video = document.getElementById('camera-video');
+                        const canvas = document.getElementById('camera-canvas');
+                        const preview = document.getElementById('camera-preview');
+                    
+                        if (!video || !canvas) {
+                            return Promise.resolve({ success: false, message: 'No se encontró la cámara' });
+                        }
+                    
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                    
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                        const imageBase64 = canvas.toDataURL('image/png');
+                    
+                        preview.src = imageBase64;
+                        preview.style.display = 'block';
+                    
+                        return fetch('/api/domino/scan-base64', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                image: imageBase64
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => data)
+                        .catch(error => {
+                            return {
+                                success: false,
+                                message: error.message
+                            };
+                        });
+                    """).then(jsonValue -> {
+                boolean success = jsonValue.get("success").asBoolean();
+
+                if (success) {
+                    int points = jsonValue.get("points").asInt();
+                    result.setText("Puntos detectados: " + points);
+                } else {
+                    String message = jsonValue.has("message")
+                            ? jsonValue.get("message").asText()
+                            : "Error desconocido";
+
+                    result.setText("Error: " + message);
+                }
+            });
+        });
+
+        Button close = new Button("Cerrar", event -> dialog.close());
+        close.setWidthFull();
+
+        content.add(cameraBox, result, takePhoto, close);
         dialog.add(content);
 
         dialog.addOpenedChangeListener(event -> {
             if (event.isOpened()) {
                 getElement().executeJs("""
-                setTimeout(() => {
-                    const video = document.getElementById('camera-video');
-
-                    if (!video) {
-                        console.error('No se encontró el video');
-                        return;
-                    }
-
-                    navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: 'environment'
-                        },
-                        audio: false
-                    }).then(stream => {
-                        window.dominoCameraStream = stream;
-                        video.srcObject = stream;
-                    }).catch(error => {
-                        alert('No se pudo abrir la cámara: ' + error.message);
-                        console.error(error);
-                    });
-                }, 300);
-            """);
+                            setTimeout(() => {
+                                const video = document.getElementById('camera-video');
+                        
+                                if (!video) {
+                                    console.error('No se encontró el video');
+                                    return;
+                                }
+                        
+                                navigator.mediaDevices.getUserMedia({
+                                    video: {
+                                        facingMode: 'environment'
+                                    },
+                                    audio: false
+                                }).then(stream => {
+                                    window.dominoCameraStream = stream;
+                                    video.srcObject = stream;
+                                }).catch(error => {
+                                    alert('No se pudo abrir la cámara: ' + error.message);
+                                    console.error(error);
+                                });
+                            }, 300);
+                        """);
             } else {
                 getElement().executeJs("""
-                if (window.dominoCameraStream) {
-                    window.dominoCameraStream.getTracks().forEach(track => track.stop());
-                    window.dominoCameraStream = null;
-                }
-            """);
+                            if (window.dominoCameraStream) {
+                                window.dominoCameraStream.getTracks().forEach(track => track.stop());
+                                window.dominoCameraStream = null;
+                            }
+                        """);
             }
         });
 
         dialog.open();
     }
+
 
 }
