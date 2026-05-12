@@ -26,7 +26,6 @@ public class GameBoardView extends VerticalLayout {
     private boolean playersSelectorOpen = false;
     private int selectedPlayers = 2;
     private HorizontalLayout topControlsLayout;
-    private VerticalLayout cameraControlsLayout;
 
     private Div playersGrid;
 
@@ -55,28 +54,14 @@ public class GameBoardView extends VerticalLayout {
         setPadding(false);
         setSpacing(false);
 
-        getStyle()
-                .set("min-height", "calc(100vh - 64px)")
-                .set("background", "linear-gradient(135deg, #d8c7a3, #b8a77f)")
-                .set("padding", "18px")
-                .set("box-sizing", "border-box");
-        add(
-                topControls(),
-//                cameraControls(),
-                playersGrid(),
-                bottomBar()
-        );
+        getStyle().set("min-height", "calc(100vh - 64px)").set("background", "linear-gradient(135deg, #d8c7a3, #b8a77f)").set("padding", "18px").set("box-sizing", "border-box");
+        add(topControls(), playersGrid(), bottomBar());
     }
 
     private Div playersGrid() {
         playersGrid = new Div();
 
-        playersGrid.getStyle()
-                .set("display", "grid")
-                .set("width", "100%")
-                .set("max-width", "720px")
-                .set("margin", "0 auto")
-                .set("flex", "1");
+        playersGrid.getStyle().set("display", "grid").set("width", "100%").set("max-width", "720px").set("margin", "0 auto").set("flex", "1");
 
         refreshPlayersGrid();
 
@@ -104,12 +89,7 @@ public class GameBoardView extends VerticalLayout {
         targetSelectorLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         targetSelectorLayout.setAlignItems(Alignment.CENTER);
 
-        targetSelectorLayout.getStyle()
-                .set("gap", "8px")
-                .set("margin-top", "18px")
-                .set("margin-bottom", "24px")
-                .set("flex-wrap", "wrap")
-                .set("background", "red");
+        targetSelectorLayout.getStyle().set("gap", "8px").set("margin-top", "18px").set("margin-bottom", "24px").set("flex-wrap", "wrap").set("background", "red");
 
         refreshTargetSelector();
 
@@ -122,22 +102,13 @@ public class GameBoardView extends VerticalLayout {
         layout.setAlignItems(Alignment.CENTER);
         layout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        layout.getStyle()
-                .set("margin-top", "24px");
+        layout.getStyle().set("margin-top", "24px");
 
         Button history = new Button("↶");
         styleIconButton(history);
 
         Button restart = new Button("RESTART");
-        restart.getStyle()
-                .set("background", "transparent")
-                .set("color", "red")
-                .set("border", "3px solid red")
-                .set("border-radius", "14px")
-                .set("font-weight", "900")
-                .set("font-size", "24px")
-                .set("padding", "6px 28px")
-                .set("cursor", "pointer");
+        restart.getStyle().set("background", "transparent").set("color", "red").set("border", "3px solid red").set("border-radius", "14px").set("font-weight", "900").set("font-size", "24px").set("padding", "6px 28px").set("cursor", "pointer");
 
         layout.add(history, restart);
         return layout;
@@ -150,26 +121,21 @@ public class GameBoardView extends VerticalLayout {
         wrapper.setSpacing(false);
         wrapper.setAlignItems(Alignment.CENTER);
 
-        wrapper.getStyle()
-                .set("margin-top", "18px")
-                .set("margin-bottom", "80px");
+        wrapper.getStyle().set("margin-top", "18px").set("margin-bottom", "60px");
 
         Button camera = cameraButton();
 
         topControlsLayout = new HorizontalLayout();
-        topControlsLayout.setWidthFull();
+        topControlsLayout.setWidth("100%");
+        topControlsLayout.setMaxWidth("260px");
         topControlsLayout.setAlignItems(Alignment.CENTER);
         topControlsLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        topControlsLayout.getStyle()
-                .set("margin-top", "18px")
-                .set("padding", "0 62px")
-                .set("box-sizing", "border-box");
+        topControlsLayout.getStyle().set("margin-top", "18px").set("gap", "28px").set("box-sizing", "border-box");
 
         refreshTopControls();
 
         wrapper.add(camera, topControlsLayout);
-
         return wrapper;
     }
 
@@ -179,9 +145,7 @@ public class GameBoardView extends VerticalLayout {
         wrapper.setSpacing(false);
         wrapper.setWidthFull();
 
-        wrapper.getStyle()
-                .set("align-items", "flex-end")
-                .set("background", "transparent");
+        wrapper.getStyle().set("align-items", "flex-end").set("background", "transparent");
 
         HorizontalLayout card = new HorizontalLayout();
         card.setWidthFull();
@@ -190,22 +154,10 @@ public class GameBoardView extends VerticalLayout {
 
         card.addClassName("player-card");
 
-        card.getStyle()
-                .set("background", "rgba(255,255,255,0.82)")
-                .set("border-radius", "14px")
-                .set("box-shadow", "0 6px 16px rgba(0,0,0,0.16)")
-                .set("padding", "8px 12px")
-                .set("box-sizing", "border-box");
+        card.getStyle().set("background", "rgba(255,255,255,0.82)").set("border-radius", "14px").set("box-shadow", "0 6px 16px rgba(0,0,0,0.16)").set("padding", "8px 12px").set("box-sizing", "border-box");
 
         Button nameButton = new Button(player.name);
-        nameButton.getStyle()
-                .set("background", "transparent")
-                .set("border", "none")
-                .set("font-size", "22px")
-                .set("font-weight", "900")
-                .set("color", "#000")
-                .set("padding", "0")
-                .set("cursor", "pointer");
+        nameButton.getStyle().set("background", "transparent").set("border", "none").set("font-size", "22px").set("font-weight", "900").set("color", "#000").set("padding", "0").set("cursor", "pointer");
 
         nameButton.addClickListener(event -> openEditNameDialog(player));
 
@@ -217,20 +169,10 @@ public class GameBoardView extends VerticalLayout {
             }
         });
 
-        add.getStyle()
-                .set("background", "transparent")
-                .set("border", "none")
-                .set("font-size", "34px")
-                .set("font-weight", "400")
-                .set("color", "#000")
-                .set("cursor", "pointer");
+        add.getStyle().set("background", "transparent").set("border", "none").set("font-size", "34px").set("font-weight", "400").set("color", "#000").set("cursor", "pointer");
 
         Span gamesWon = new Span(String.valueOf(player.gamesWon));
-        gamesWon.getStyle()
-                .set("font-size", "52px")
-                .set("font-weight", "900")
-                .set("color", "rgba(0,0,0,0.25)")
-                .set("line-height", "1");
+        gamesWon.getStyle().set("font-size", "52px").set("font-weight", "900").set("color", "rgba(0,0,0,0.25)").set("line-height", "1");
 
         card.add(nameButton, add, gamesWon);
 
@@ -239,8 +181,7 @@ public class GameBoardView extends VerticalLayout {
         roundsLayout.setSpacing(false);
         roundsLayout.setWidthFull();
 
-        roundsLayout.getStyle()
-                .set("padding", "8px 0 0 0");
+        roundsLayout.getStyle().set("padding", "8px 0 0 0");
 
         int roundNumber = 1;
 
@@ -250,20 +191,13 @@ public class GameBoardView extends VerticalLayout {
             row.setAlignItems(Alignment.CENTER);
             row.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-            row.getStyle()
-                    .set("border-bottom", "1px solid rgba(255,255,255,0.55)")
-                    .set("padding", "10px 8px");
+            row.getStyle().set("border-bottom", "1px solid rgba(255,255,255,0.55)").set("padding", "10px 8px");
 
             Span number = new Span(String.valueOf(roundNumber++));
-            number.getStyle()
-                    .set("color", "rgba(255,255,255,0.75)")
-                    .set("font-size", "18px");
+            number.getStyle().set("color", "rgba(255,255,255,0.75)").set("font-size", "18px");
 
             Span value = new Span(String.valueOf(points));
-            value.getStyle()
-                    .set("font-size", "34px")
-                    .set("font-weight", "900")
-                    .set("color", "#000");
+            value.getStyle().set("font-size", "34px").set("font-weight", "900").set("color", "#000");
 
             row.add(number, value);
             roundsLayout.add(row);
@@ -274,20 +208,12 @@ public class GameBoardView extends VerticalLayout {
         totalRow.setAlignItems(Alignment.CENTER);
         totalRow.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        totalRow.getStyle()
-                .set("height", "80px")
-                .set("padding-top", "24px")
-                .set("box-sizing", "border-box")
-                .set("background", "transparent");
+        totalRow.getStyle().set("height", "80px").set("padding-top", "24px").set("box-sizing", "border-box").set("background", "transparent");
 
         Span total = new Span(player.totalScore() + " /" + selectedTarget);
 
 //        AQUI ESTA EL TOTAL DE PUNTOS
-        total.getStyle()
-                .set("font-size", "40px")
-                .set("font-weight", "900")
-                .set("line-height", "1")
-                .set("color", "blue");
+        total.getStyle().set("font-size", "40px").set("font-weight", "900").set("line-height", "1").set("color", "blue");
 
         totalRow.add(total);
 
@@ -301,17 +227,13 @@ public class GameBoardView extends VerticalLayout {
 
         targetSelectorLayout = new HorizontalLayout();
         targetSelectorLayout.setAlignItems(Alignment.CENTER);
-        targetSelectorLayout.getStyle()
-                .set("gap", "8px")
-                .set("flex-wrap", "wrap");
+        targetSelectorLayout.getStyle().set("gap", "8px").set("flex-wrap", "wrap");
 
         refreshTargetSelector();
 
         HorizontalLayout playersSelector = new HorizontalLayout();
         playersSelector.setAlignItems(Alignment.CENTER);
-        playersSelector.getStyle()
-                .set("gap", "8px")
-                .set("flex-wrap", "wrap");
+        playersSelector.getStyle().set("gap", "8px").set("flex-wrap", "wrap");
 
         if (!playersSelectorOpen) {
             Button players = new Button("👥 " + selectedPlayers + " ❯");
@@ -329,9 +251,7 @@ public class GameBoardView extends VerticalLayout {
                 styleDarkButton(button);
 
                 if (amount == selectedPlayers) {
-                    button.getStyle()
-                            .set("background", "#ffffff")
-                            .set("color", "#111111");
+                    button.getStyle().set("background", "#ffffff").set("color", "#111111");
                 }
 
                 button.addClickListener(event -> {
@@ -401,10 +321,7 @@ public class GameBoardView extends VerticalLayout {
 
         playersGrid.removeAll();
 
-        playersGrid.getStyle()
-                .set("grid-template-columns", "repeat(2, minmax(0, 1fr))")
-                .set("gap", "20px")
-                .set("align-items", "start");
+        playersGrid.getStyle().set("grid-template-columns", "repeat(2, minmax(0, 1fr))").set("gap", "20px").set("align-items", "start");
 
         for (Playerstate player : players) {
             playersGrid.add(playerCard(player));
@@ -419,8 +336,7 @@ public class GameBoardView extends VerticalLayout {
         content.setSpacing(true);
         content.setWidth("300px");
 
-        com.vaadin.flow.component.textfield.IntegerField targetField =
-                new com.vaadin.flow.component.textfield.IntegerField("Cantidad");
+        com.vaadin.flow.component.textfield.IntegerField targetField = new com.vaadin.flow.component.textfield.IntegerField("Cantidad");
 
         targetField.setWidthFull();
         targetField.setMin(1);
@@ -440,10 +356,7 @@ public class GameBoardView extends VerticalLayout {
         });
 
         save.setWidthFull();
-        save.getStyle()
-                .set("background", "#101820")
-                .set("color", "#ffffff")
-                .set("border-radius", "10px");
+        save.getStyle().set("background", "#101820").set("color", "#ffffff").set("border-radius", "10px");
 
         content.add(targetField, save);
         dialog.add(content);
@@ -451,23 +364,11 @@ public class GameBoardView extends VerticalLayout {
     }
 
     private void styleDarkButton(Button button) {
-        button.getStyle()
-                .set("background", "#000")
-                .set("color", "#fff")
-                .set("border-radius", "12px")
-                .set("font-size", "22px")
-                .set("font-weight", "700")
-                .set("padding", "6px 18px")
-                .set("cursor", "pointer");
+        button.getStyle().set("background", "#000").set("color", "#fff").set("border-radius", "10px").set("font-size", "22px").set("font-weight", "900").set("padding", "2px 14px").set("height", "34px").set("min-width", "82px").set("cursor", "pointer").set("box-shadow", "0 2px 5px rgba(0,0,0,0.25)");
     }
 
     private void styleIconButton(Button button) {
-        button.getStyle()
-                .set("background", "transparent")
-                .set("color", "#ffffff")
-                .set("font-size", "34px")
-                .set("border", "none")
-                .set("cursor", "pointer");
+        button.getStyle().set("background", "transparent").set("color", "#ffffff").set("font-size", "34px").set("border", "none").set("cursor", "pointer");
     }
 
     private void syncPlayers() {
@@ -488,8 +389,7 @@ public class GameBoardView extends VerticalLayout {
         content.setPadding(true);
         content.setSpacing(true);
 
-        com.vaadin.flow.component.textfield.TextField nameField =
-                new com.vaadin.flow.component.textfield.TextField("Nombre del jugador");
+        com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField("Nombre del jugador");
 
         nameField.setWidthFull();
         nameField.setValue(player.name);
@@ -505,10 +405,7 @@ public class GameBoardView extends VerticalLayout {
         });
 
         save.setWidthFull();
-        save.getStyle()
-                .set("background", "#101820")
-                .set("color", "#ffffff")
-                .set("border-radius", "10px");
+        save.getStyle().set("background", "#101820").set("color", "#ffffff").set("border-radius", "10px");
 
         content.add(nameField, save);
         dialog.add(content);
@@ -523,8 +420,7 @@ public class GameBoardView extends VerticalLayout {
         content.setPadding(true);
         content.setSpacing(true);
 
-        com.vaadin.flow.component.textfield.IntegerField pointsField =
-                new com.vaadin.flow.component.textfield.IntegerField("Tantos");
+        com.vaadin.flow.component.textfield.IntegerField pointsField = new com.vaadin.flow.component.textfield.IntegerField("Tantos");
 
         pointsField.setWidthFull();
         pointsField.setMin(0);
@@ -548,10 +444,7 @@ public class GameBoardView extends VerticalLayout {
         });
 
         save.setWidthFull();
-        save.getStyle()
-                .set("background", "#101820")
-                .set("color", "#ffffff")
-                .set("border-radius", "10px");
+        save.getStyle().set("background", "#101820").set("color", "#ffffff").set("border-radius", "10px");
 
         content.add(pointsField, save);
         dialog.add(content);
@@ -600,27 +493,16 @@ public class GameBoardView extends VerticalLayout {
         content.setAlignItems(Alignment.CENTER);
 
         H1 title = new H1("🎉 Ganador 🎉");
-        title.getStyle()
-                .set("margin", "0")
-                .set("color", "#101820")
-                .set("font-size", "32px")
-                .set("text-align", "center");
+        title.getStyle().set("margin", "0").set("color", "#101820").set("font-size", "32px").set("text-align", "center");
 
         H2 winnerName = new H2(player.name);
-        winnerName.getStyle()
-                .set("margin", "0")
-                .set("font-size", "28px")
-                .set("color", "#000");
+        winnerName.getStyle().set("margin", "0").set("font-size", "28px").set("color", "#000");
 
         H3 score = new H3("Puntos: " + player.totalScore() + " / " + selectedTarget);
-        score.getStyle()
-                .set("margin", "0")
-                .set("color", "#555");
+        score.getStyle().set("margin", "0").set("color", "#555");
 
         Span games = new Span("Partidas ganadas: " + player.gamesWon);
-        games.getStyle()
-                .set("font-size", "18px")
-                .set("font-weight", "700");
+        games.getStyle().set("font-size", "18px").set("font-weight", "700");
 
         Button newRound = new Button("Nueva ronda", event -> {
             resetRound();
@@ -628,14 +510,7 @@ public class GameBoardView extends VerticalLayout {
         });
 
         newRound.setWidthFull();
-        newRound.getStyle()
-                .set("background", "#101820")
-                .set("color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("font-weight", "900")
-                .set("font-size", "18px")
-                .set("height", "44px")
-                .set("cursor", "pointer");
+        newRound.getStyle().set("background", "#101820").set("color", "#ffffff").set("border-radius", "12px").set("font-weight", "900").set("font-size", "18px").set("height", "44px").set("cursor", "pointer");
 
         content.add(title, winnerName, score, games, newRound);
         dialog.add(content);
@@ -701,15 +576,8 @@ public class GameBoardView extends VerticalLayout {
 
     private Button cameraButton() {
         Button camera = new Button("📷 Cámara");
-        camera.getStyle()
-                .set("background", "#ffffff")
-                .set("color", "#000")
-                .set("border-radius", "14px")
-                .set("font-weight", "700")
-                .set("font-size", "18px")
-                .set("padding", "8px 22px")
-                .set("cursor", "pointer")
-                .set("box-shadow", "0 4px 12px rgba(0,0,0,0.18)");
+
+        camera.getStyle().set("background", "#ffffff").set("color", "#000").set("border-radius", "12px").set("font-weight", "900").set("font-size", "18px").set("padding", "8px 24px").set("height", "42px").set("cursor", "pointer").set("box-shadow", "0 4px 12px rgba(0,0,0,0.18)");
 
         camera.addClickListener(event -> openCameraDialog());
 
@@ -740,21 +608,17 @@ public class GameBoardView extends VerticalLayout {
                         
                         <img id="camera-preview" 
                             style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-                        """
-        );
+                        
+                            <img id="processed-preview"
+                                                style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+                        """);
 
         Span result = new Span("Toma una foto para analizar la jugada.");
-        result.getStyle()
-                .set("font-weight", "700")
-                .set("color", "#333");
+        result.getStyle().set("font-weight", "700").set("color", "#333");
 
         Button takePhoto = new Button("📸 Tomar foto");
         takePhoto.setWidthFull();
-        takePhoto.getStyle()
-                .set("background", "#101820")
-                .set("color", "#fff")
-                .set("border-radius", "10px")
-                .set("font-weight", "800");
+        takePhoto.getStyle().set("background", "#101820").set("color", "#fff").set("border-radius", "10px").set("font-weight", "800");
 
         takePhoto.addClickListener(event -> {
             getElement().executeJs("""
@@ -800,6 +664,22 @@ public class GameBoardView extends VerticalLayout {
                 if (success) {
                     int points = jsonValue.get("points").asInt();
                     result.setText("Puntos detectados: " + points);
+
+                    String processedImage = jsonValue.has("processedImage")
+                            && !jsonValue.get("processedImage").isNull()
+                            ? jsonValue.get("processedImage").asText()
+                            : null;
+
+                    if (processedImage != null) {
+                        getElement().executeJs("""
+                                    const processed = document.getElementById('processed-preview');
+                                    if (processed) {
+                                        processed.src = $0;
+                                        processed.style.display = 'block';
+                                    }
+                                """, processedImage);
+                    }
+
                 } else {
                     String message = jsonValue.has("message")
                             ? jsonValue.get("message").asText()
@@ -808,51 +688,70 @@ public class GameBoardView extends VerticalLayout {
                     result.setText("Error: " + message);
                 }
             });
-        });
 
-        Button close = new Button("Cerrar", event -> dialog.close());
+//            if (success) {
+//                int points = jsonValue.get("points").asInt();
+//                result.setText("Puntos detectados: " + points);
+//            } else {
+//                String message = jsonValue.has("message") ? jsonValue.get("message").asText() : "Error desconocido";
+//
+//                result.setText("Error: " + message);
+//            }
+//        });
+    });
+
+    Button close = new Button("Cerrar", event -> dialog.close());
         close.setWidthFull();
 
-        content.add(cameraBox, result, takePhoto, close);
+        content.add(cameraBox,result,takePhoto,close);
         dialog.add(content);
 
-        dialog.addOpenedChangeListener(event -> {
-            if (event.isOpened()) {
-                getElement().executeJs("""
-                            setTimeout(() => {
-                                const video = document.getElementById('camera-video');
-                        
-                                if (!video) {
-                                    console.error('No se encontró el video');
-                                    return;
-                                }
-                        
-                                navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        facingMode: 'environment'
-                                    },
-                                    audio: false
-                                }).then(stream => {
-                                    window.dominoCameraStream = stream;
-                                    video.srcObject = stream;
-                                }).catch(error => {
-                                    alert('No se pudo abrir la cámara: ' + error.message);
-                                    console.error(error);
-                                });
-                            }, 300);
-                        """);
-            } else {
-                getElement().executeJs("""
-                            if (window.dominoCameraStream) {
-                                window.dominoCameraStream.getTracks().forEach(track => track.stop());
-                                window.dominoCameraStream = null;
+        dialog.addOpenedChangeListener(event ->
+
+    {
+        if (event.isOpened()) {
+            getElement().executeJs("""
+                        setTimeout(() => {
+                            const video = document.getElementById('camera-video');
+                    
+                            if (!video) {
+                                console.error('No se encontró el video');
+                                return;
                             }
-                        """);
-            }
-        });
+                    
+                            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                                alert('Este navegador no permite acceso a cámara. Usa HTTPS o Chrome.');
+                                return;
+                            }
+                    
+                            navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    facingMode: { ideal: 'environment' },
+                                    width: { ideal: 1280 },
+                                    height: { ideal: 720 }
+                                },
+                                audio: false
+                            }).then(stream => {
+                                window.dominoCameraStream = stream;
+                                video.srcObject = stream;
+                            }).catch(error => {
+                                alert('No se pudo abrir la cámara: ' + error.message);
+                                console.error(error);
+                            });
+                        }, 300);
+                    """);
+        } else {
+            getElement().executeJs("""
+                        if (window.dominoCameraStream) {
+                            window.dominoCameraStream.getTracks().forEach(track => track.stop());
+                            window.dominoCameraStream = null;
+                        }
+                    """);
+        }
+    });
 
         dialog.open();
-    }
+}
 
 
 }
