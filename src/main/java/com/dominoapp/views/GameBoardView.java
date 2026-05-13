@@ -10,9 +10,12 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Route(value = "", layout = MainLayout.class)
@@ -688,22 +691,14 @@ public class GameBoardView extends VerticalLayout {
                     result.setText("Error: " + message);
                 }
             });
-
-//            if (success) {
-//                int points = jsonValue.get("points").asInt();
-//                result.setText("Puntos detectados: " + points);
-//            } else {
-//                String message = jsonValue.has("message") ? jsonValue.get("message").asText() : "Error desconocido";
-//
-//                result.setText("Error: " + message);
-//            }
-//        });
     });
 
     Button close = new Button("Cerrar", event -> dialog.close());
         close.setWidthFull();
 
-        content.add(cameraBox,result,takePhoto,close);
+        Upload upload = imageUpload(result);
+        content.add(cameraBox, result, takePhoto, upload, close);
+
         dialog.add(content);
 
         dialog.addOpenedChangeListener(event ->
@@ -753,5 +748,98 @@ public class GameBoardView extends VerticalLayout {
         dialog.open();
 }
 
+
+
+    private Upload imageUpload(Span result) {
+
+        Upload upload = new Upload(
+                UploadHandler.inMemory((metadata, data) -> {
+                    try {
+                        String mimeType = metadata.contentType();
+                        String base64 = Base64.getEncoder().encodeToString(data);
+                        String imageBase64 = "data:" + mimeType + ";base64," + base64;
+
+                        getUI().ifPresent(ui -> ui.access(() -> processUploadedImage(imageBase64, result)));
+
+                    } catch (Exception e) {
+                        getUI().ifPresent(ui -> ui.access(() ->
+                                result.setText("Error cargando imagen: " + e.getMessage())
+                        ));
+                    }
+                })
+        );
+
+        upload.setAcceptedFileTypes("image/png", "image/jpeg", "image/jpg", "image/webp");
+        upload.setMaxFiles(1);
+        upload.setDropAllowed(true);
+
+        upload.setUploadButton(new Button("📁 Cargar imagen"));
+        upload.setDropLabel(new Span("Arrastra una imagen aquí"));
+
+        upload.getStyle()
+                .set("width", "100%")
+                .set("border", "2px dashed #ccc")
+                .set("border-radius", "12px")
+                .set("padding", "10px")
+                .set("box-sizing", "border-box");
+
+        return upload;
+    }
+
+    private void processUploadedImage(String imageBase64, Span result) {
+        getElement().executeJs("""
+        const preview = document.getElementById('camera-preview');
+        if (preview) {
+            preview.src = $0;
+            preview.style.display = 'block';
+        }
+
+        return fetch('/api/domino/scan-base64', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: $0
+            })
+        })
+        .then(response => response.json())
+        .then(data => data)
+        .catch(error => {
+            return {
+                success: false,
+                message: error.message
+            };
+        });
+    """, imageBase64).then(jsonValue -> {
+            boolean success = jsonValue.get("success").asBoolean();
+
+            if (success) {
+                int points = jsonValue.get("points").asInt();
+                result.setText("Puntos detectados: " + points);
+
+                String processedImage = jsonValue.has("processedImage")
+                        && !jsonValue.get("processedImage").isNull()
+                        ? jsonValue.get("processedImage").asText()
+                        : null;
+
+                if (processedImage != null) {
+                    getElement().executeJs("""
+                    const processed = document.getElementById('processed-preview');
+                    if (processed) {
+                        processed.src = $0;
+                        processed.style.display = 'block';
+                    }
+                """, processedImage);
+                }
+            } else {
+                String message = jsonValue.has("message")
+                        ? jsonValue.get("message").asText()
+                        : "Error desconocido";
+
+                result.setText("Error: " + message);
+            }
+        });
+    }
 
 }
