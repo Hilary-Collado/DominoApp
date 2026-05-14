@@ -12,7 +12,7 @@
     "@vaadin/vaadin-usage-statistics": "2.1.3",
     "date-fns": "4.1.0",
     "lit": "3.3.2",
-    "ngrok": "^5.0.0-beta.2",
+    "ngrok": "5.0.0-beta.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-router": "7.13.1"
@@ -68,7 +68,7 @@
       "vite": "7.3.2",
       "vite-plugin-checker": "0.12.0"
     },
-    "hash": "3022af43b7de07b20db97ebc82a135044bd5c49d020fec2a417c8f086f0f7817",
+    "hash": "cccaa07a178ed57877c6b5b257778c1b64578b229044d8b0a23a87cbb88df0fb",
     "overrides": {
       "@vaadin/a11y-base": "25.1.2",
       "@vaadin/accordion": "25.1.2",

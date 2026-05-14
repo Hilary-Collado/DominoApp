@@ -18,301 +18,125 @@ public class DominoVisionService {
         OpenCV.loadLocally();
     }
 
-//    public int detectPoints(String base64Image) {
-//        try {
-//            String cleanBase64 = base64Image
-//                    .replace("data:image/png;base64,", "")
-//                    .replace("data:image/jpeg;base64,", "");
-//
-//            byte[] imageBytes = Base64.getDecoder().decode(cleanBase64);
-//
-//            Mat image = Imgcodecs.imdecode(
-//                    new MatOfByte(imageBytes),
-//                    Imgcodecs.IMREAD_COLOR
-//            );
-//
-//            if (image.empty()) {
-//                return 0;
-//            }
-//
-//            // ESCALA DE GRISES
-//            Mat gray = new Mat();
-//            Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
-//
-//            // MEJORAR CONTRASTE
-//            Mat equalized = new Mat();
-//            Imgproc.equalizeHist(gray, equalized);
-//
-//            // BLUR
-//            Mat blur = new Mat();
-//            Imgproc.GaussianBlur(equalized, blur, new Size(7, 7), 2);
-//
-//            // THRESHOLD
-//            Mat threshold = new Mat();
-//
-//            Imgproc.adaptiveThreshold(
-//                    blur,
-//                    threshold,
-//                    255,
-//                    Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-//                    Imgproc.THRESH_BINARY_INV,
-//                    11,
-//                    2
-//            );
-//
-//            // DETECTAR CÍRCULOS
-//            Mat circles = new Mat();
-//
-//            Imgproc.HoughCircles(
-//                    blur,
-//                    circles,
-//                    Imgproc.HOUGH_GRADIENT,
-//                    1.2,
-//                    18,
-//                    120,
-//                    22,
-//                    4,
-//                    12
-//            );
-//
-
-    /// /            int detected = circles.cols();
-    /// /
-    /// /            return Math.max(detected, 0);
-//
-//            int count = 0;
-//
-//            for (int i = 0; i < circles.cols(); i++) {
-//                double[] c = circles.get(0, i);
-//
-//                if (c == null || c.length < 3) {
-//                    continue;
-//                }
-//
-//                double radius = c[2];
-//
-//                if (radius >= 4 && radius <= 12) {
-//                    count++;
-//                }
-//            }
-//
-//            return count;
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return 0;
-//        }
-//    }
-//
     public DominoVisionResult detectPointsWithDebugImage(String base64Image) {
         try {
+            // Limpiar cabecera base64
             String cleanBase64 = base64Image
                     .replace("data:image/png;base64,", "")
                     .replace("data:image/jpeg;base64,", "");
 
+            // Decodificar imagen
             byte[] imageBytes = Base64.getDecoder().decode(cleanBase64);
+            Mat image = Imgcodecs.imdecode(new MatOfByte(imageBytes), Imgcodecs.IMREAD_COLOR);
 
-            Mat image = Imgcodecs.imdecode(
-                    new MatOfByte(imageBytes),
-                    Imgcodecs.IMREAD_COLOR
-            );
+            if (image.empty()) return new DominoVisionResult(0, null);
 
-            if (image.empty()) {
-                return new DominoVisionResult(0, null);
-            }
-
-            Mat hsv = new Mat();
-            Imgproc.cvtColor(image, hsv, Imgproc.COLOR_BGR2HSV);
-
-            Mat whiteMask = new Mat();
-
-            Core.inRange(
-                    hsv,
-                    new Scalar(0, 0, 130),
-                    new Scalar(180, 80, 255),
-                    whiteMask
-            );
-
-            Mat kernel = Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT,
-                    new Size(5, 5)
-            );
-
-//            Imgproc.morphologyEx(whiteMask, whiteMask, Imgproc.MORPH_CLOSE, kernel);
-//            Imgproc.morphologyEx(whiteMask, whiteMask, Imgproc.MORPH_OPEN, kernel);
-            Imgproc.morphologyEx(whiteMask, whiteMask, Imgproc.MORPH_OPEN, kernel);
-
-            java.util.List<MatOfPoint> contours = new java.util.ArrayList<>();
-            Mat hierarchy = new Mat();
-
-            Imgproc.findContours(
-                    whiteMask.clone(),
-                    contours,
-                    hierarchy,
-                    Imgproc.RETR_EXTERNAL,
-                    Imgproc.CHAIN_APPROX_SIMPLE
-            );
-
-            Mat dominoMask = Mat.zeros(image.size(), CvType.CV_8UC1);
-
-            for (MatOfPoint contour : contours) {
-                double area = Imgproc.contourArea(contour);
-
-                if (area < 80 || area > 20000) {
-                    continue;
-                }
-
-                MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
-
-                double perimeter = Imgproc.arcLength(contour2f, true);
-
-                MatOfPoint2f approx = new MatOfPoint2f();
-
-                Imgproc.approxPolyDP(
-                        contour2f,
-                        approx,
-                        0.03 * perimeter,
-                        true
-                );
-
-                Rect rect = Imgproc.boundingRect(
-                        new MatOfPoint(approx.toArray())
-                );
-
-                if (rect.width < 8 || rect.height < 8) {
-                    continue;
-                }
-
-                double ratio = (double) rect.width / rect.height;
-
-                boolean possibleDominoArea = ratio > 0.15 && ratio < 6.5;
-
-                if (!possibleDominoArea) {
-                    continue;
-                }
-
-                Imgproc.drawContours(
-                        dominoMask,
-                        java.util.List.of(contour),
-                        -1,
-                        new Scalar(255),
-                        -1
-                );
-
-                Imgproc.rectangle(
-                        image,
-                        rect,
-                        new Scalar(255, 0, 0),
-                        2
-                );
-            }
-
-//            Mat onlyDominoes = new Mat();
-//            image.copyTo(onlyDominoes, dominoMask);
-//
-//            Mat gray = new Mat();
-//            Imgproc.cvtColor(onlyDominoes, gray, Imgproc.COLOR_BGR2GRAY);
-
+            // --- FASE 1: SEGMENTACIÓN ROBUSTA DE DOMINÓS ---
 
             Mat gray = new Mat();
             Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
 
-// aplicar máscara directamente al gris
-            Core.bitwise_and(gray, dominoMask, gray);
+            // Binarización automática con Otsu para encontrar objetos brillantes
+            Mat binary = new Mat();
+            // Invertimos porque los dominós son más claros que el fondo
+            // Esto crea un fondo negro con dominós blancos.
+            Imgproc.threshold(gray, binary, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
 
-            Mat equalized = new Mat();
-            Imgproc.equalizeHist(gray, equalized);
+            // Limpieza morfológica de las formas
+            Mat kernel5 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
 
-            Mat blur = new Mat();
-            Imgproc.GaussianBlur(equalized, blur, new Size(7, 7), 2);
+            // 1. Cierre (MORPH_CLOSE) para tapar agujeros negros dentro de las piezas
+            Imgproc.morphologyEx(binary, binary, Imgproc.MORPH_CLOSE, kernel5, new Point(-1,-1), 1);
+            // 2. Apertura (MORPH_OPEN) para eliminar ruido pequeño del fondo
+            Imgproc.morphologyEx(binary, binary, Imgproc.MORPH_OPEN, kernel5, new Point(-1,-1), 1);
 
-            Imgcodecs.imwrite("debug-mask.png", dominoMask);
-            Imgcodecs.imwrite("debug-gray.png", gray);
-            Imgcodecs.imwrite("debug-blur.png", blur);
+            // Encontrar contornos de las formas detectadas
+            List<MatOfPoint> contours = new ArrayList<>();
+            Mat hierarchy = new Mat();
+            Imgproc.findContours(binary, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-            Mat circles = new Mat();
+            Mat dominoMask = Mat.zeros(image.size(), CvType.CV_8UC1);
+            List<Rect> validDominoRects = new ArrayList<>();
 
-            Imgproc.HoughCircles(
-                    blur,
-                    circles,
-                    Imgproc.HOUGH_GRADIENT,
-                    1.,
-                    10,
-                    80,
-                    14,
-                    3,
-                    14
-            );
+            for (MatOfPoint contour : contours) {
+                double area = Imgproc.contourArea(contour);
 
-            int count = 0;
+                // Filtro de área más realista (las piezas son grandes)
+                if (area < 1500) continue;
 
-            List<Point> detectedCenters = new ArrayList<>();
+                // Aproximación de forma para suavizar bordes
+                MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
+                double perimeter = Imgproc.arcLength(contour2f, true);
+                MatOfPoint2f approx = new MatOfPoint2f();
+                Imgproc.approxPolyDP(contour2f, approx, 0.02 * perimeter, true);
 
-            for (int i = 0; i < circles.cols(); i++) {
+                // Rectángulo contenedor para la geometría
+                Rect rect = Imgproc.boundingRect(contour);
+                double ratio = (double) rect.width / rect.height;
 
-                double[] c = circles.get(0, i);
-
-                if (c == null || c.length < 3) {
-                    continue;
+                // FILTRO GEOMÉTRICO ESTRICTO:
+                // Un dominó es un cuadrado (ratio~1.0) o un rectángulo doble (ratio~0.5 o 2.0).
+                if (ratio > 0.3 && ratio < 3.0) {
+                    // Si pasa los filtros, lo pintamos en la máscara final como blanco puro
+                    Imgproc.drawContours(dominoMask, List.of(contour), -1, new Scalar(255), -1);
+                    validDominoRects.add(rect);
+                    // Debug: Caja azul para la pieza detectada
+                    Imgproc.rectangle(image, rect, new Scalar(255, 0, 0), 2);
                 }
-
-                int x = (int) Math.round(c[0]);
-                int y = (int) Math.round(c[1]);
-                int radius = (int) Math.round(c[2]);
-
-                if (radius < 4 || radius > 12) {
-                    continue;
-                }
-
-                Point center = new Point(x, y);
-
-                boolean duplicated = false;
-
-                for (Point existing : detectedCenters) {
-
-                    double distance = Math.sqrt(
-                            Math.pow(existing.x - center.x, 2) +
-                                    Math.pow(existing.y - center.y, 2)
-                    );
-
-                    if (distance < 12) {
-                        duplicated = true;
-                        break;
-                    }
-                }
-
-                if (duplicated) {
-                    continue;
-                }
-
-                detectedCenters.add(center);
-
-                count++;
-
-                Imgproc.circle(
-                        image,
-                        center,
-                        radius,
-                        new Scalar(0, 255, 0),
-                        3
-                );
-
-                Imgproc.circle(
-                        image,
-                        center,
-                        2,
-                        new Scalar(0, 0, 255),
-                        3
-                );
             }
 
+            // --- FASE 2: CONTEO DE PUNTOS ---
+
+            // Aislar los dominós en escala de grises
+            Mat grayIsolated = new Mat();
+            Core.bitwise_and(gray, dominoMask, grayIsolated);
+
+            // Binarizar la máscara aislada para resaltar solo los puntos negros
+            Mat binaryIsolated = new Mat();
+            // Buscamos puntos muy oscuros (negros) en las zonas aisladas
+            Imgproc.threshold(grayIsolated, binaryIsolated, 50, 255, Imgproc.THRESH_BINARY_INV);
+            // Aplicar máscara otra vez para limpiar lo que no es pieza
+            Core.bitwise_and(binaryIsolated, dominoMask, binaryIsolated);
+
+            // Suavizado específico para círculos
+            Mat blurForCircles = new Mat();
+            Imgproc.medianBlur(binaryIsolated, blurForCircles, 7); // Funciona mejor para eliminar ruido de bordes
+
+            // Detección de círculos (Parámetros ajustados)
+            Mat circles = new Mat();
+            Imgproc.HoughCircles(
+                    blurForCircles,
+                    circles,
+                    Imgproc.HOUGH_GRADIENT,
+                    1.2,   // dp: resolución
+                    25,    // minDist: Distancia mínima entre puntos (más grande para evitar dobles)
+                    100,   // param1: Sensibilidad de bordes (Canny)
+                    12,    // param2: Umbral de detección (subir si detecta ruido, bajar si no detecta)
+                    5,     // minRadius: los puntos no son diminutos
+                    18     // maxRadius: los puntos no son gigantes
+            );
+
+            // --- FASE 3: DIBUJADO Y RESULTADOS ---
+            int pointCount = 0;
+            if (circles.cols() > 0) {
+                pointCount = circles.cols();
+                for (int i = 0; i < pointCount; i++) {
+                    double[] c = circles.get(0, i);
+                    Point center = new Point(Math.round(c[0]), Math.round(c[1]));
+                    int radius = (int) Math.round(c[2]);
+
+                    // Pintamos los puntos detectados en verde con centro rojo
+                    Imgproc.circle(image, center, radius, new Scalar(0, 255, 0), 2);
+                    Imgproc.circle(image, center, 2, new Scalar(0, 0, 255), 3);
+                }
+            }
+
+            // Codificar imagen resultante
             MatOfByte output = new MatOfByte();
             Imgcodecs.imencode(".png", image, output);
+            String processedImage = "data:image/png;base64," + Base64.getEncoder().encodeToString(output.toArray());
 
-            String processedImage = "data:image/png;base64," +
-                    Base64.getEncoder().encodeToString(output.toArray());
-
-            return new DominoVisionResult(count, processedImage);
+            return new DominoVisionResult(pointCount, processedImage);
 
         } catch (Exception e) {
             e.printStackTrace();
