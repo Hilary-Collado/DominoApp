@@ -37,15 +37,20 @@ public class GameBoardView extends VerticalLayout {
 
     private final java.util.List<Playerstate> players = new java.util.ArrayList<>();
 
+    private boolean isTeamMode = false;
+
     private static class Playerstate {
         String name;
+        Playerstate partner = null;
         int gamesWon;
+        int teamId;
         int previousTotal = 0;
         int lastAdded = 0;
         List<Integer> rounds = new ArrayList<>();
 
-        Playerstate(String name) {
+        Playerstate(String name, int teamId) {
             this.name = name;
+            this.teamId = teamId;
         }
 
         int totalScore() {
@@ -239,6 +244,9 @@ public class GameBoardView extends VerticalLayout {
         playersSelector.setAlignItems(Alignment.CENTER);
         playersSelector.getStyle().set("gap", "8px").set("flex-wrap", "wrap");
 
+        HorizontalLayout modeSelector = new HorizontalLayout();
+        modeSelector.setAlignItems(Alignment.CENTER);
+
         if (!playersSelectorOpen) {
             Button players = new Button("👥 " + selectedPlayers + " ❯");
             styleDarkButton(players);
@@ -268,7 +276,21 @@ public class GameBoardView extends VerticalLayout {
                 playersSelector.add(button);
             }
         }
-        topControlsLayout.add(targetSelectorLayout, playersSelector);
+
+
+        // Botón de Modo (Solo si son 4 jugadores)
+        if (selectedPlayers == 4) {
+            Button modeBtn = new Button(isTeamMode ? "👥 Parejas" : "👤 Individual");
+            styleDarkButton(modeBtn);
+            modeBtn.addClickListener(e -> {
+                isTeamMode = !isTeamMode;
+                refreshTopControls();
+                refreshPlayersGrid();
+            });
+            modeSelector.add(modeBtn);
+        }
+
+        topControlsLayout.add(targetSelectorLayout, modeSelector, playersSelector);
     }
 
     private void refreshTargetSelector() {
@@ -374,11 +396,23 @@ public class GameBoardView extends VerticalLayout {
         button.getStyle().set("background", "transparent").set("color", "#ffffff").set("font-size", "34px").set("border", "none").set("cursor", "pointer");
     }
 
+//    private void syncPlayers() {
+//        while (players.size() < selectedPlayers) {
+//            players.add(new Playerstate("Jugador " + (players.size() + 1)));
+//        }
+//
+//        while (players.size() > selectedPlayers) {
+//            players.remove(players.size() - 1);
+//        }
+//    }
+
     private void syncPlayers() {
         while (players.size() < selectedPlayers) {
-            players.add(new Playerstate("Jugador " + (players.size() + 1)));
+            int index = players.size();
+            // Equipo 0 para jugadores 1 y 3, Equipo 1 para jugadores 2 y 4
+            int teamId = (index % 2 == 0) ? 0 : 1;
+            players.add(new Playerstate("Jugador " + (index + 1), teamId));
         }
-
         while (players.size() > selectedPlayers) {
             players.remove(players.size() - 1);
         }
@@ -447,32 +481,219 @@ public class GameBoardView extends VerticalLayout {
         dialog.open();
     }
 
+//    private void addPoints(Playerstate player, int points) {
+//        if (gameFinished || points <= 0) {
+//            return;
+//        }
+//
+//        int currentTotal = player.totalScore();
+//        int newTotal = currentTotal + points;
+//
+//        if (newTotal >= selectedTarget) {
+//            int allowedPoints = selectedTarget - currentTotal;
+//
+//            if (allowedPoints > 0) {
+//                player.rounds.add(allowedPoints);
+//            }
+//
+//            player.gamesWon++;
+//            winner = player;
+//            gameFinished = true;
+//
+//            refreshPlayersGrid();
+//            showWinnerDialog(player);
+//            return;
+//        }
+//
+//        player.rounds.add(points);
+//        refreshPlayersGrid();
+//    }
+
+
+//    private void addPoints(Playerstate player, int points) {
+//        if (gameFinished || points <= 0) return;
+//
+//        if (isTeamMode && selectedPlayers == 4) {
+//            // Buscamos al compañero (el que tiene el mismo teamId)
+//            for (Playerstate p : players) {
+//                if (p.teamId == player.teamId) {
+//                    applyPointsToPlayer(p, points);
+//                }
+//            }
+//        } else {
+//            applyPointsToPlayer(player, points);
+//        }
+//
+//        refreshPlayersGrid();
+//    }
+
+//    private void applyPointsToPlayer(Playerstate p, int points) {
+//        p.previousTotal = p.totalScore();
+//        p.lastAdded = points;
+//
+//        int newTotal = p.totalScore() + points;
+//
+//        if (newTotal >= selectedTarget) {
+//            int allowed = selectedTarget - p.totalScore();
+//            if (allowed > 0) p.rounds.add(allowed);
+//
+//            // --- LÓGICA DE GANADOR EN PAREJAS ---
+//            if (isTeamMode && selectedPlayers == 4) {
+//                // Recorremos todos los jugadores y sumamos victoria a los que tengan el mismo teamId
+//                for (Playerstate player : players) {
+//                    if (player.teamId == p.teamId) {
+//                        player.gamesWon++;
+//                    }
+//                }
+//            } else {
+//                // Si es individual, solo suma el jugador actual
+//                p.gamesWon++;
+//            }
+//
+//            gameFinished = true;
+////            winner = p;
+//            showWinnerDialog(p);
+//        } else {
+//            p.rounds.add(points);
+//        }
+//
+
+    /// /        if (newTotal >= selectedTarget) {
+    /// /            int allowed = selectedTarget - p.totalScore();
+    /// /            if (allowed > 0) p.rounds.add(allowed);
+    /// /            p.gamesWon++;
+    /// /            gameFinished = true;
+    /// /            winner = p;
+    /// /            showWinnerDialog(p);
+    /// /        } else {
+    /// /            p.rounds.add(points);
+    /// /        }
+//    }
+//
+//    private void showWinnerDialog(Playerstate player) {
+//        launchConfetti();
+//
+//        Dialog dialog = new Dialog();
+//        dialog.setCloseOnEsc(false);
+//        dialog.setCloseOnOutsideClick(false);
+//
+//        VerticalLayout content = new VerticalLayout();
+//        content.setWidth("360px");
+//        content.setPadding(true);
+//        content.setSpacing(true);
+//        content.setAlignItems(Alignment.CENTER);
+//
+//        H1 title = new H1("🎉 Ganador 🎉");
+//        title.getStyle().set("margin", "0").set("color", "#101820").set("font-size", "32px").set("text-align", "center");
+//        // Cambia esto en showWinnerDialog
+//
+//        H2 winnerName = new H2(player.name);
+//        winnerName.getStyle().set("margin", "0").set("font-size", "28px").set("color", "#000");
+//
+//        H3 score = new H3("Puntos: " + player.totalScore() + " / " + selectedTarget);
+//        score.getStyle().set("margin", "0").set("color", "#555");
+//
+//        Span games = new Span("Partidas ganadas: " + player.gamesWon);
+//        games.getStyle().set("font-size", "18px").set("font-weight", "700");
+//
+//        Button newRound = new Button("Nueva ronda", event -> {
+//            resetRound();
+//            dialog.close();
+//        });
+//
+//        newRound.setWidthFull();
+//        newRound.getStyle().set("background", "#101820").set("color", "#ffffff").set("border-radius", "12px").set("font-weight", "900").set("font-size", "18px").set("height", "44px").set("cursor", "pointer");
+//
+//        content.add(title, winnerName, score, games, newRound);
+//        dialog.add(content);
+//        dialog.open();
+//    }
+//    private void applyPointsToPlayer(Playerstate p, int points) {
+//        p.previousTotal = p.totalScore();
+//        p.lastAdded = points;
+//
+//        int newTotal = p.totalScore() + points;
+//
+//        if (newTotal >= selectedTarget) {
+//            int allowed = selectedTarget - p.totalScore();
+//            if (allowed > 0) p.rounds.add(allowed);
+//
+//            gameFinished = true;
+//            winner = p; // Es importante mantener la referencia de quién cerró
+//
+//            if (isTeamMode && selectedPlayers == 4) {
+//                for (Playerstate player : players) {
+//                    if (player.teamId == p.teamId) {
+//                        player.gamesWon++;
+//                    }
+//                }
+//            } else {
+//                p.gamesWon++;
+//            }
+//
+//            showWinnerDialog(p); // Llamamos al diálogo
+//        } else {
+//            p.rounds.add(points);
+//        }
+//    }
+
+
     private void addPoints(Playerstate player, int points) {
-        if (gameFinished || points <= 0) {
-            return;
-        }
+        if (gameFinished || points <= 0) return;
 
-        int currentTotal = player.totalScore();
-        int newTotal = currentTotal + points;
+        if (isTeamMode && selectedPlayers == 4) {
+            // 1. Sumamos puntos a ambos integrantes del equipo
+            for (Playerstate p : players) {
+                if (p.teamId == player.teamId) {
+                    p.previousTotal = p.totalScore();
+                    p.lastAdded = points;
 
-        if (newTotal >= selectedTarget) {
-            int allowedPoints = selectedTarget - currentTotal;
-
-            if (allowedPoints > 0) {
-                player.rounds.add(allowedPoints);
+                    int newTotal = p.totalScore() + points;
+                    if (newTotal >= selectedTarget) {
+                        int allowed = selectedTarget - p.totalScore();
+                        if (allowed > 0) p.rounds.add(allowed);
+                    } else {
+                        p.rounds.add(points);
+                    }
+                }
             }
 
-            player.gamesWon++;
-            winner = player;
-            gameFinished = true;
-
-            refreshPlayersGrid();
-            showWinnerDialog(player);
-            return;
+            // 2. Verificamos si el equipo alcanzó la meta para sumar UNA victoria
+            if (player.totalScore() >= selectedTarget) {
+                gameFinished = true;
+                winner = player;
+                for (Playerstate p : players) {
+                    if (p.teamId == player.teamId) {
+                        p.gamesWon++; // Se suma solo una vez a cada uno
+                    }
+                }
+                showWinnerDialog(player);
+            }
+        } else {
+            // Modo individual normal
+            applyPointsToPlayer(player, points);
         }
 
-        player.rounds.add(points);
         refreshPlayersGrid();
+    }
+
+    private void applyPointsToPlayer(Playerstate p, int points) {
+        p.previousTotal = p.totalScore();
+        p.lastAdded = points;
+
+        int newTotal = p.totalScore() + points;
+
+        if (newTotal >= selectedTarget) {
+            int allowed = selectedTarget - p.totalScore();
+            if (allowed > 0) p.rounds.add(allowed);
+
+            p.gamesWon++; // Victoria individual
+            gameFinished = true;
+            winner = p;
+            showWinnerDialog(p);
+        } else {
+            p.rounds.add(points);
+        }
     }
 
     private void showWinnerDialog(Playerstate player) {
@@ -488,16 +709,30 @@ public class GameBoardView extends VerticalLayout {
         content.setSpacing(true);
         content.setAlignItems(Alignment.CENTER);
 
-        H1 title = new H1("🎉 Ganador 🎉");
+        // Título dinámico
+        String textoTitulo = (isTeamMode) ? "¡Pareja Ganadora!" : "🎉 Ganador 🎉";
+        H1 title = new H1(textoTitulo);
         title.getStyle().set("margin", "0").set("color", "#101820").set("font-size", "32px").set("text-align", "center");
 
-        H2 winnerName = new H2(player.name);
-        winnerName.getStyle().set("margin", "0").set("font-size", "28px").set("color", "#000");
+        // Mostrar Nombres
+        String nombresGanadores = player.name;
+        if (isTeamMode) {
+            // Buscamos al compañero para mostrar su nombre también
+            for (Playerstate ps : players) {
+                if (ps.teamId == player.teamId && ps != player) {
+                    nombresGanadores += " y " + ps.name;
+                    break;
+                }
+            }
+        }
+
+        H2 winnerName = new H2(nombresGanadores);
+        winnerName.getStyle().set("margin", "0").set("font-size", "24px").set("color", "#000").set("text-align", "center");
 
         H3 score = new H3("Puntos: " + player.totalScore() + " / " + selectedTarget);
         score.getStyle().set("margin", "0").set("color", "#555");
 
-        Span games = new Span("Partidas ganadas: " + player.gamesWon);
+        Span games = new Span(isTeamMode ? "¡Punto para el equipo!" : "Partidas ganadas: " + player.gamesWon);
         games.getStyle().set("font-size", "18px").set("font-weight", "700");
 
         Button newRound = new Button("Nueva ronda", event -> {
@@ -580,157 +815,6 @@ public class GameBoardView extends VerticalLayout {
         return camera;
     }
 
-//    private void openCameraDialog() {
-//        Dialog dialog = new Dialog();
-//        dialog.setWidth("430px");
-//        dialog.setMaxWidth("95vw");
-//
-//        VerticalLayout content = new VerticalLayout();
-//        content.setPadding(true);
-//        content.setSpacing(true);
-//        content.setWidthFull();
-//
-//        Div cameraBox = new Div();
-//        cameraBox.setWidthFull();
-//
-//        cameraBox.getElement().setProperty(
-//                "innerHTML",
-//                """
-//                        <video id="camera-video" autoplay playsinline
-//                            style="width:100%; border-radius:14px; background:#000;"></video>
-//
-//                        <canvas id="camera-canvas"
-//                            style="display:none;"></canvas>
-//
-//                        <img id="camera-preview"
-//                            style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-//
-//                            <img id="processed-preview"
-//                                                style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-//                        """);
-//
-//        Span result = new Span("Toma una foto para analizar la jugada.");
-//        result.getStyle().set("font-weight", "700").set("color", "#333");
-//
-//        Button takePhoto = new Button("📸 Tomar foto");
-//        takePhoto.setWidthFull();
-//        takePhoto.getStyle().set("background", "#101820").set("color", "#fff").set("border-radius", "10px").set("font-weight", "800");
-//
-//        takePhoto.addClickListener(event -> {
-//            getElement().executeJs("""
-//                                const video = document.getElementById('camera-video');
-//                                const canvas = document.getElementById('camera-canvas');
-//                                const preview = document.getElementById('camera-preview');
-//                                const processed = document.getElementById('processed-preview');
-//
-//                                if (processed) processed.style.display = 'none';
-//
-//                                canvas.width = video.videoWidth;
-//                                canvas.height = video.videoHeight;
-//
-//                                const ctx = canvas.getContext('2d');
-//                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-//
-//                                const imageBase64 = canvas.toDataURL('image/png');
-//
-//                                preview.src = imageBase64;
-//                                preview.style.display = 'block';
-//
-//                                // ✅ CRÍTICO: retornar el JSON parseado, no la Promise del fetch
-//                                return fetch('/api/domino/scan-base64', {
-//                                    method: 'POST',
-//                                    headers: { 'Content-Type': 'application/json' },
-//                                    body: JSON.stringify({ image: imageBase64 })
-//                                })
-//                                .then(r => r.json())
-//                                .then(data => data)
-//                                .catch(err => ({ success: false, points: 0, debugImage: null, message: err.message }));
-//                            """)
-//                    .then(jsonValue -> {
-//                        boolean success = jsonValue.get("success").asBoolean();
-//                        int points = jsonValue.get("points").asInt();
-//
-//                        if (success) {
-//                            result.setText("✅ Puntos detectados: " + points);
-//                            result.getStyle().set("color", "#000").set("font-size", "16px").set("font-weight", "700");
-//                        } else {
-//                            result.setText("⚠️ No se detectaron puntos (" + points + ")");
-//                            result.getStyle().set("color", "#ff6d00").set("font-size", "18px");
-//                        }
-//
-//                        // ✅ Siempre mostrar imagen de debug si existe
-//                        String debugImg = jsonValue.get("debugImage") != null
-//                                && !jsonValue.get("debugImage").isNull()
-//                                ? jsonValue.get("debugImage").asString() : null;
-//
-//                        if (debugImg != null && !debugImg.isEmpty()) {
-//                            getElement().executeJs("""
-//                                        const processed = document.getElementById('processed-preview');
-//                                        if (processed) {
-//                                            processed.src = $0;
-//                                            processed.style.display = 'block';
-//                                        }
-//                                    """, debugImg);
-//                        }
-//                    });
-//        });
-//
-//        Button close = new Button("Cerrar", event -> dialog.close());
-//        close.setWidthFull();
-//
-//        Upload upload = imageUpload(result);
-//        content.add(cameraBox, result, takePhoto, upload, close);
-//
-//        dialog.add(content);
-//
-//        dialog.addOpenedChangeListener(event ->
-//
-//        {
-//            if (event.isOpened()) {
-//                getElement().executeJs("""
-//                            setTimeout(() => {
-//                                const video = document.getElementById('camera-video');
-//
-//                                if (!video) {
-//                                    console.error('No se encontró el video');
-//                                    return;
-//                                }
-//
-//                                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-//                                    alert('Este navegador no permite acceso a cámara. Usa HTTPS o Chrome.');
-//                                    return;
-//                                }
-//
-//                                navigator.mediaDevices.getUserMedia({
-//                                    video: {
-//                                        facingMode: { ideal: 'environment' },
-//                                        width: { ideal: 1280 },
-//                                        height: { ideal: 720 }
-//                                    },
-//                                    audio: false
-//                                }).then(stream => {
-//                                    window.dominoCameraStream = stream;
-//                                    video.srcObject = stream;
-//                                }).catch(error => {
-//                                    alert('No se pudo abrir la cámara: ' + error.message);
-//                                    console.error(error);
-//                                });
-//                            }, 300);
-//                        """);
-//            } else {
-//                getElement().executeJs("""
-//                            if (window.dominoCameraStream) {
-//                                window.dominoCameraStream.getTracks().forEach(track => track.stop());
-//                                window.dominoCameraStream = null;
-//                            }
-//                        """);
-//            }
-//        });
-//
-//        dialog.open();
-//    }
-
-
     private void openCameraDialog() {
         // 1. Declaramos el diálogo primero para que sea visible en todo el método
         final Dialog cameraDialog = new Dialog();
@@ -747,11 +831,11 @@ public class GameBoardView extends VerticalLayout {
         Div cameraBox = new Div();
         cameraBox.setWidthFull();
         cameraBox.getElement().setProperty("innerHTML", """
-            <video id="camera-video" autoplay playsinline style="width:100%; border-radius:14px; background:#000;"></video>
-            <canvas id="camera-canvas" style="display:none;"></canvas>
-            <img id="camera-preview" style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-            <img id="processed-preview" style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-            """);
+                <video id="camera-video" autoplay playsinline style="width:100%; border-radius:14px; background:#000;"></video>
+                <canvas id="camera-canvas" style="display:none;"></canvas>
+                <img id="camera-preview" style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+                <img id="processed-preview" style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+                """);
 
         Span resultText = new Span("Toma una foto para analizar la jugada.");
         resultText.getStyle().set("font-weight", "700").set("color", "#333").set("text-align", "center").set("width", "100%");
@@ -770,24 +854,24 @@ public class GameBoardView extends VerticalLayout {
             assignmentArea.removeAll(); // Limpiamos botones de asignación previos
 
             getElement().executeJs("""
-                const video = document.getElementById('camera-video');
-                const canvas = document.getElementById('camera-canvas');
-                const preview = document.getElementById('camera-preview');
-                const processed = document.getElementById('processed-preview');
-                if (processed) processed.style.display = 'none';
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageBase64 = canvas.toDataURL('image/png');
-                preview.src = imageBase64;
-                preview.style.display = 'block';
-                return fetch('/api/domino/scan-base64', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: imageBase64 })
-                }).then(r => r.json());
-                """)
+                            const video = document.getElementById('camera-video');
+                            const canvas = document.getElementById('camera-canvas');
+                            const preview = document.getElementById('camera-preview');
+                            const processed = document.getElementById('processed-preview');
+                            if (processed) processed.style.display = 'none';
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const imageBase64 = canvas.toDataURL('image/png');
+                            preview.src = imageBase64;
+                            preview.style.display = 'block';
+                            return fetch('/api/domino/scan-base64', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ image: imageBase64 })
+                            }).then(r => r.json());
+                            """)
                     .then(jsonValue -> {
                         boolean success = jsonValue.get("success").asBoolean();
                         int pointsDetected = jsonValue.get("points").asInt();
@@ -844,16 +928,16 @@ public class GameBoardView extends VerticalLayout {
         cameraDialog.addOpenedChangeListener(event -> {
             if (event.isOpened()) {
                 getElement().executeJs("""
-                setTimeout(() => {
-                    const video = document.getElementById('camera-video');
-                    navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment', width: 1280, height: 720 }
-                    }).then(stream => {
-                        window.dominoCameraStream = stream;
-                        video.srcObject = stream;
-                    }).catch(err => alert('Error de cámara: ' + err));
-                }, 300);
-                """);
+                        setTimeout(() => {
+                            const video = document.getElementById('camera-video');
+                            navigator.mediaDevices.getUserMedia({
+                                video: { facingMode: 'environment', width: 1280, height: 720 }
+                            }).then(stream => {
+                                window.dominoCameraStream = stream;
+                                video.srcObject = stream;
+                            }).catch(err => alert('Error de cámara: ' + err));
+                        }, 300);
+                        """);
             } else {
                 getElement().executeJs("if(window.dominoCameraStream) { window.dominoCameraStream.getTracks().forEach(t => t.stop()); window.dominoCameraStream = null; }");
             }
@@ -942,60 +1026,3 @@ public class GameBoardView extends VerticalLayout {
                 });
     }
 }
-
-//    private void processUploadedImage(String imageBase64, Span result) {
-//        getElement().executeJs("""
-//                    const preview = document.getElementById('camera-preview');
-//                    if (preview) {
-//                        preview.src = $0;
-//                        preview.style.display = 'block';
-//                    }
-//
-//                    return fetch('/api/domino/scan-base64', {
-//                        method: 'POST',
-//                        headers: {
-//                            'Content-Type': 'application/json'
-//                        },
-//                        body: JSON.stringify({
-//                            image: $0
-//                        })
-//                    })
-//                    .then(response => response.json())
-//                    .then(data => data)
-//                    .catch(error => {
-//                        return {
-//                            success: false,
-//                            message: error.message
-//                        };
-//                    });
-//                """, imageBase64).then(jsonValue -> {
-//            boolean success = jsonValue.get("success").asBoolean();
-//
-//            if (success) {
-//                int points = jsonValue.get("points").asInt();
-//                result.setText("Puntos detectados: " + points);
-//
-//                String processedImage = jsonValue.has("processedImage")
-//                        && !jsonValue.get("processedImage").isNull()
-//                        ? jsonValue.get("processedImage").asText()
-//                        : null;
-//
-//                if (processedImage != null) {
-//                    getElement().executeJs("""
-//                                const processed = document.getElementById('processed-preview');
-//                                if (processed) {
-//                                    processed.src = $0;
-//                                    processed.style.display = 'block';
-//                                }
-//                            """, processedImage);
-//                }
-//            } else {
-//                String message = jsonValue.has("message")
-//                        ? jsonValue.get("message").asText()
-//                        : "Error desconocido";
-//
-//                result.setText("Error: " + message);
-//            }
-//        });
-//    }
-//}
