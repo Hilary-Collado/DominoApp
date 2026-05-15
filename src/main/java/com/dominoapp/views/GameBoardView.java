@@ -40,7 +40,8 @@ public class GameBoardView extends VerticalLayout {
     private static class Playerstate {
         String name;
         int gamesWon;
-
+        int previousTotal = 0;
+        int lastAdded = 0;
         List<Integer> rounds = new ArrayList<>();
 
         Playerstate(String name) {
@@ -279,7 +280,6 @@ public class GameBoardView extends VerticalLayout {
 
             selected.addClickListener(event -> {
                 targetSelectorOpen = true;
-//                refreshTargetSelector();
                 refreshTopControls();
             });
 
@@ -434,14 +434,7 @@ public class GameBoardView extends VerticalLayout {
             Integer value = pointsField.getValue();
 
             if (value != null && value >= 0) {
-//                player.rounds.add(value);
                 addPoints(player, value);
-
-//                if (player.totalScore() >= selectedTarget) {
-//                    player.gamesWon++;
-//                }
-//
-//                refreshPlayersGrid();
                 dialog.close();
             }
         });
@@ -587,171 +580,289 @@ public class GameBoardView extends VerticalLayout {
         return camera;
     }
 
+//    private void openCameraDialog() {
+//        Dialog dialog = new Dialog();
+//        dialog.setWidth("430px");
+//        dialog.setMaxWidth("95vw");
+//
+//        VerticalLayout content = new VerticalLayout();
+//        content.setPadding(true);
+//        content.setSpacing(true);
+//        content.setWidthFull();
+//
+//        Div cameraBox = new Div();
+//        cameraBox.setWidthFull();
+//
+//        cameraBox.getElement().setProperty(
+//                "innerHTML",
+//                """
+//                        <video id="camera-video" autoplay playsinline
+//                            style="width:100%; border-radius:14px; background:#000;"></video>
+//
+//                        <canvas id="camera-canvas"
+//                            style="display:none;"></canvas>
+//
+//                        <img id="camera-preview"
+//                            style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+//
+//                            <img id="processed-preview"
+//                                                style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+//                        """);
+//
+//        Span result = new Span("Toma una foto para analizar la jugada.");
+//        result.getStyle().set("font-weight", "700").set("color", "#333");
+//
+//        Button takePhoto = new Button("📸 Tomar foto");
+//        takePhoto.setWidthFull();
+//        takePhoto.getStyle().set("background", "#101820").set("color", "#fff").set("border-radius", "10px").set("font-weight", "800");
+//
+//        takePhoto.addClickListener(event -> {
+//            getElement().executeJs("""
+//                                const video = document.getElementById('camera-video');
+//                                const canvas = document.getElementById('camera-canvas');
+//                                const preview = document.getElementById('camera-preview');
+//                                const processed = document.getElementById('processed-preview');
+//
+//                                if (processed) processed.style.display = 'none';
+//
+//                                canvas.width = video.videoWidth;
+//                                canvas.height = video.videoHeight;
+//
+//                                const ctx = canvas.getContext('2d');
+//                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+//
+//                                const imageBase64 = canvas.toDataURL('image/png');
+//
+//                                preview.src = imageBase64;
+//                                preview.style.display = 'block';
+//
+//                                // ✅ CRÍTICO: retornar el JSON parseado, no la Promise del fetch
+//                                return fetch('/api/domino/scan-base64', {
+//                                    method: 'POST',
+//                                    headers: { 'Content-Type': 'application/json' },
+//                                    body: JSON.stringify({ image: imageBase64 })
+//                                })
+//                                .then(r => r.json())
+//                                .then(data => data)
+//                                .catch(err => ({ success: false, points: 0, debugImage: null, message: err.message }));
+//                            """)
+//                    .then(jsonValue -> {
+//                        boolean success = jsonValue.get("success").asBoolean();
+//                        int points = jsonValue.get("points").asInt();
+//
+//                        if (success) {
+//                            result.setText("✅ Puntos detectados: " + points);
+//                            result.getStyle().set("color", "#000").set("font-size", "16px").set("font-weight", "700");
+//                        } else {
+//                            result.setText("⚠️ No se detectaron puntos (" + points + ")");
+//                            result.getStyle().set("color", "#ff6d00").set("font-size", "18px");
+//                        }
+//
+//                        // ✅ Siempre mostrar imagen de debug si existe
+//                        String debugImg = jsonValue.get("debugImage") != null
+//                                && !jsonValue.get("debugImage").isNull()
+//                                ? jsonValue.get("debugImage").asString() : null;
+//
+//                        if (debugImg != null && !debugImg.isEmpty()) {
+//                            getElement().executeJs("""
+//                                        const processed = document.getElementById('processed-preview');
+//                                        if (processed) {
+//                                            processed.src = $0;
+//                                            processed.style.display = 'block';
+//                                        }
+//                                    """, debugImg);
+//                        }
+//                    });
+//        });
+//
+//        Button close = new Button("Cerrar", event -> dialog.close());
+//        close.setWidthFull();
+//
+//        Upload upload = imageUpload(result);
+//        content.add(cameraBox, result, takePhoto, upload, close);
+//
+//        dialog.add(content);
+//
+//        dialog.addOpenedChangeListener(event ->
+//
+//        {
+//            if (event.isOpened()) {
+//                getElement().executeJs("""
+//                            setTimeout(() => {
+//                                const video = document.getElementById('camera-video');
+//
+//                                if (!video) {
+//                                    console.error('No se encontró el video');
+//                                    return;
+//                                }
+//
+//                                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+//                                    alert('Este navegador no permite acceso a cámara. Usa HTTPS o Chrome.');
+//                                    return;
+//                                }
+//
+//                                navigator.mediaDevices.getUserMedia({
+//                                    video: {
+//                                        facingMode: { ideal: 'environment' },
+//                                        width: { ideal: 1280 },
+//                                        height: { ideal: 720 }
+//                                    },
+//                                    audio: false
+//                                }).then(stream => {
+//                                    window.dominoCameraStream = stream;
+//                                    video.srcObject = stream;
+//                                }).catch(error => {
+//                                    alert('No se pudo abrir la cámara: ' + error.message);
+//                                    console.error(error);
+//                                });
+//                            }, 300);
+//                        """);
+//            } else {
+//                getElement().executeJs("""
+//                            if (window.dominoCameraStream) {
+//                                window.dominoCameraStream.getTracks().forEach(track => track.stop());
+//                                window.dominoCameraStream = null;
+//                            }
+//                        """);
+//            }
+//        });
+//
+//        dialog.open();
+//    }
+
+
     private void openCameraDialog() {
-        Dialog dialog = new Dialog();
-        dialog.setWidth("430px");
-        dialog.setMaxWidth("95vw");
+        // 1. Declaramos el diálogo primero para que sea visible en todo el método
+        final Dialog cameraDialog = new Dialog();
+        cameraDialog.setWidth("430px");
+        cameraDialog.setMaxWidth("95vw");
 
-        VerticalLayout content = new VerticalLayout();
-        content.setPadding(true);
-        content.setSpacing(true);
-        content.setWidthFull();
+        // 2. Declaramos el contenedor principal
+        final VerticalLayout mainContent = new VerticalLayout();
+        mainContent.setPadding(true);
+        mainContent.setSpacing(true);
+        mainContent.setWidthFull();
 
+        // Contenedor de video y preview
         Div cameraBox = new Div();
         cameraBox.setWidthFull();
+        cameraBox.getElement().setProperty("innerHTML", """
+            <video id="camera-video" autoplay playsinline style="width:100%; border-radius:14px; background:#000;"></video>
+            <canvas id="camera-canvas" style="display:none;"></canvas>
+            <img id="camera-preview" style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+            <img id="processed-preview" style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
+            """);
 
-        cameraBox.getElement().setProperty(
-                "innerHTML",
-                """
-                        <video id="camera-video" autoplay playsinline 
-                            style="width:100%; border-radius:14px; background:#000;"></video>
-                        
-                        <canvas id="camera-canvas" 
-                            style="display:none;"></canvas>
-                        
-                        <img id="camera-preview" 
-                            style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-                        
-                            <img id="processed-preview"
-                                                style="display:none; width:100%; border-radius:14px; margin-top:10px;" />
-                        """);
+        Span resultText = new Span("Toma una foto para analizar la jugada.");
+        resultText.getStyle().set("font-weight", "700").set("color", "#333").set("text-align", "center").set("width", "100%");
 
-        Span result = new Span("Toma una foto para analizar la jugada.");
-        result.getStyle().set("font-weight", "700").set("color", "#333");
+        // 3. Área dinámica donde aparecerán los botones de los jugadores
+        final VerticalLayout assignmentArea = new VerticalLayout();
+        assignmentArea.setPadding(false);
+        assignmentArea.setSpacing(true);
+        assignmentArea.setWidthFull();
 
-        Button takePhoto = new Button("📸 Tomar foto");
-        takePhoto.setWidthFull();
-        takePhoto.getStyle().set("background", "#101820").set("color", "#fff").set("border-radius", "10px").set("font-weight", "800");
+        Button takePhotoBtn = new Button("📸 Tomar foto");
+        takePhotoBtn.setWidthFull();
+        takePhotoBtn.getStyle().set("background", "#101820").set("color", "#fff").set("border-radius", "10px").set("font-weight", "800");
 
-        takePhoto.addClickListener(event -> {
+        takePhotoBtn.addClickListener(event -> {
+            assignmentArea.removeAll(); // Limpiamos botones de asignación previos
+
             getElement().executeJs("""
-                        const video = document.getElementById('camera-video');
-                        const canvas = document.getElementById('camera-canvas');
-                        const preview = document.getElementById('camera-preview');
-                    
-                        if (!video || !canvas) {
-                            return Promise.resolve({ success: false, message: 'No se encontró la cámara' });
-                        }
-                    
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                    
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                        const imageBase64 = canvas.toDataURL('image/png');
-                    
-                        preview.src = imageBase64;
-                        preview.style.display = 'block';
-                    
-                        return fetch('/api/domino/scan-base64', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                image: imageBase64
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => data)
-                        .catch(error => {
-                            return {
-                                success: false,
-                                message: error.message
-                            };
-                        });
-                    """).then(jsonValue -> {
-                boolean success = jsonValue.get("success").asBoolean();
+                const video = document.getElementById('camera-video');
+                const canvas = document.getElementById('camera-canvas');
+                const preview = document.getElementById('camera-preview');
+                const processed = document.getElementById('processed-preview');
+                if (processed) processed.style.display = 'none';
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageBase64 = canvas.toDataURL('image/png');
+                preview.src = imageBase64;
+                preview.style.display = 'block';
+                return fetch('/api/domino/scan-base64', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageBase64 })
+                }).then(r => r.json());
+                """)
+                    .then(jsonValue -> {
+                        boolean success = jsonValue.get("success").asBoolean();
+                        int pointsDetected = jsonValue.get("points").asInt();
 
-                if (success) {
-                    int points = jsonValue.get("points").asInt();
-                    result.setText("Puntos detectados: " + points);
+                        if (success && pointsDetected > 0) {
+                            resultText.setText("✅ Puntos detectados: " + pointsDetected);
+                            resultText.getStyle().set("color", "#00c853");
 
-                    String processedImage = jsonValue.has("processedImage")
-                            && !jsonValue.get("processedImage").isNull()
-                            ? jsonValue.get("processedImage").asText()
-                            : null;
+                            // Botón para desplegar la lista de jugadores
+                            Button assignBtn = new Button("Asignar " + pointsDetected + " puntos a...");
+                            assignBtn.setWidthFull();
+                            assignBtn.getStyle().set("background", "#2962ff").set("color", "white").set("font-weight", "bold");
 
-                    if (processedImage != null) {
-                        getElement().executeJs("""
-                                    const processed = document.getElementById('processed-preview');
-                                    if (processed) {
-                                        processed.src = $0;
-                                        processed.style.display = 'block';
-                                    }
-                                """, processedImage);
-                    }
+                            assignBtn.addClickListener(e -> {
+                                assignmentArea.removeAll(); // Quita el botón azul para mostrar los nombres
+                                for (Playerstate p : players) {
+                                    Button pBtn = new Button(p.name);
+                                    pBtn.setWidthFull();
+                                    pBtn.getStyle().set("border", "2px solid #2962ff").set("color", "#2962ff");
 
-                } else {
-                    String message = jsonValue.has("message")
-                            ? jsonValue.get("message").asText()
-                            : "Error desconocido";
+                                    pBtn.addClickListener(clickEvent -> {
+                                        // Guardamos historial para la animación de suma
+                                        p.previousTotal = p.totalScore();
+                                        p.lastAdded = pointsDetected;
 
-                    result.setText("Error: " + message);
-                }
-            });
-    });
-
-    Button close = new Button("Cerrar", event -> dialog.close());
-        close.setWidthFull();
-
-        Upload upload = imageUpload(result);
-        content.add(cameraBox, result, takePhoto, upload, close);
-
-        dialog.add(content);
-
-        dialog.addOpenedChangeListener(event ->
-
-    {
-        if (event.isOpened()) {
-            getElement().executeJs("""
-                        setTimeout(() => {
-                            const video = document.getElementById('camera-video');
-                    
-                            if (!video) {
-                                console.error('No se encontró el video');
-                                return;
-                            }
-                    
-                            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                                alert('Este navegador no permite acceso a cámara. Usa HTTPS o Chrome.');
-                                return;
-                            }
-                    
-                            navigator.mediaDevices.getUserMedia({
-                                video: {
-                                    facingMode: { ideal: 'environment' },
-                                    width: { ideal: 1280 },
-                                    height: { ideal: 720 }
-                                },
-                                audio: false
-                            }).then(stream => {
-                                window.dominoCameraStream = stream;
-                                video.srcObject = stream;
-                            }).catch(error => {
-                                alert('No se pudo abrir la cámara: ' + error.message);
-                                console.error(error);
+                                        addPoints(p, pointsDetected);
+                                        cameraDialog.close(); // Cerramos el diálogo usando la variable final
+                                    });
+                                    assignmentArea.add(pBtn);
+                                }
                             });
-                        }, 300);
-                    """);
-        } else {
-            getElement().executeJs("""
-                        if (window.dominoCameraStream) {
-                            window.dominoCameraStream.getTracks().forEach(track => track.stop());
-                            window.dominoCameraStream = null;
+                            assignmentArea.add(assignBtn);
+                        } else {
+                            resultText.setText("❌ No se detectaron puntos");
+                            resultText.getStyle().set("color", "red");
                         }
-                    """);
-        }
-    });
 
-        dialog.open();
-}
+                        // Debug: Mostrar imagen procesada por la IA
+                        if (jsonValue.has("debugImage") && !jsonValue.get("debugImage").isNull()) {
+                            String debugImg = jsonValue.get("debugImage").asString();
+                            getElement().executeJs("document.getElementById('processed-preview').src = $0; document.getElementById('processed-preview').style.display = 'block';", debugImg);
+                        }
+                    });
+        });
 
+        Button closeBtn = new Button("Cerrar", event -> cameraDialog.close());
+        closeBtn.setWidthFull();
 
+        // 4. Armamos el layout con las variables correctas
+        mainContent.add(cameraBox, resultText, takePhotoBtn, assignmentArea, closeBtn);
+        cameraDialog.add(mainContent);
+
+        // Lógica para encender/apagar la cámara físicamente
+        cameraDialog.addOpenedChangeListener(event -> {
+            if (event.isOpened()) {
+                getElement().executeJs("""
+                setTimeout(() => {
+                    const video = document.getElementById('camera-video');
+                    navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment', width: 1280, height: 720 }
+                    }).then(stream => {
+                        window.dominoCameraStream = stream;
+                        video.srcObject = stream;
+                    }).catch(err => alert('Error de cámara: ' + err));
+                }, 300);
+                """);
+            } else {
+                getElement().executeJs("if(window.dominoCameraStream) { window.dominoCameraStream.getTracks().forEach(t => t.stop()); window.dominoCameraStream = null; }");
+            }
+        });
+
+        cameraDialog.open();
+    }
 
     private Upload imageUpload(Span result) {
-
         Upload upload = new Upload(
                 UploadHandler.inMemory((metadata, data) -> {
                     try {
@@ -782,64 +893,109 @@ public class GameBoardView extends VerticalLayout {
                 .set("border-radius", "12px")
                 .set("padding", "10px")
                 .set("box-sizing", "border-box");
-
         return upload;
     }
 
     private void processUploadedImage(String imageBase64, Span result) {
         getElement().executeJs("""
-        const preview = document.getElementById('camera-preview');
-        if (preview) {
-            preview.src = $0;
-            preview.style.display = 'block';
-        }
+                            const preview = document.getElementById('camera-preview');
+                            if (preview) {
+                                preview.src = $0;
+                                preview.style.display = 'block';
+                            }
+                        
+                            return fetch('/api/domino/scan-base64', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ image: $0 })
+                            })
+                            .then(r => r.json())
+                            .then(data => data)
+                            .catch(err => ({ success: false, points: 0, debugImage: null, message: err.message }));
+                        """, imageBase64)
+                .then(jsonValue -> {
+                    boolean success = jsonValue.get("success").asBoolean();
+                    int points = jsonValue.get("points").asInt();
 
-        return fetch('/api/domino/scan-base64', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                image: $0
-            })
-        })
-        .then(response => response.json())
-        .then(data => data)
-        .catch(error => {
-            return {
-                success: false,
-                message: error.message
-            };
-        });
-    """, imageBase64).then(jsonValue -> {
-            boolean success = jsonValue.get("success").asBoolean();
-
-            if (success) {
-                int points = jsonValue.get("points").asInt();
-                result.setText("Puntos detectados: " + points);
-
-                String processedImage = jsonValue.has("processedImage")
-                        && !jsonValue.get("processedImage").isNull()
-                        ? jsonValue.get("processedImage").asText()
-                        : null;
-
-                if (processedImage != null) {
-                    getElement().executeJs("""
-                    const processed = document.getElementById('processed-preview');
-                    if (processed) {
-                        processed.src = $0;
-                        processed.style.display = 'block';
+                    if (success) {
+                        result.setText("✅ Puntos: " + points);
+                        result.getStyle().set("color", "#00c853").set("font-size", "22px").set("font-weight", "900");
+                    } else {
+                        result.setText("⚠️ No se detectaron puntos");
+                        result.getStyle().set("color", "#ff6d00");
                     }
-                """, processedImage);
-                }
-            } else {
-                String message = jsonValue.has("message")
-                        ? jsonValue.get("message").asText()
-                        : "Error desconocido";
 
-                result.setText("Error: " + message);
-            }
-        });
+                    // ✅ Siempre usar "debugImage" — nombre unificado con el DTO
+                    String debugImg = jsonValue.get("debugImage") != null
+                            && !jsonValue.get("debugImage").isNull()
+                            ? jsonValue.get("debugImage").asString() : null;
+
+                    if (debugImg != null && !debugImg.isEmpty()) {
+                        getElement().executeJs("""
+                                    const processed = document.getElementById('processed-preview');
+                                    if (processed) {
+                                        processed.src = $0;
+                                        processed.style.display = 'block';
+                                    }
+                                """, debugImg);
+                    }
+                });
     }
-
 }
+
+//    private void processUploadedImage(String imageBase64, Span result) {
+//        getElement().executeJs("""
+//                    const preview = document.getElementById('camera-preview');
+//                    if (preview) {
+//                        preview.src = $0;
+//                        preview.style.display = 'block';
+//                    }
+//
+//                    return fetch('/api/domino/scan-base64', {
+//                        method: 'POST',
+//                        headers: {
+//                            'Content-Type': 'application/json'
+//                        },
+//                        body: JSON.stringify({
+//                            image: $0
+//                        })
+//                    })
+//                    .then(response => response.json())
+//                    .then(data => data)
+//                    .catch(error => {
+//                        return {
+//                            success: false,
+//                            message: error.message
+//                        };
+//                    });
+//                """, imageBase64).then(jsonValue -> {
+//            boolean success = jsonValue.get("success").asBoolean();
+//
+//            if (success) {
+//                int points = jsonValue.get("points").asInt();
+//                result.setText("Puntos detectados: " + points);
+//
+//                String processedImage = jsonValue.has("processedImage")
+//                        && !jsonValue.get("processedImage").isNull()
+//                        ? jsonValue.get("processedImage").asText()
+//                        : null;
+//
+//                if (processedImage != null) {
+//                    getElement().executeJs("""
+//                                const processed = document.getElementById('processed-preview');
+//                                if (processed) {
+//                                    processed.src = $0;
+//                                    processed.style.display = 'block';
+//                                }
+//                            """, processedImage);
+//                }
+//            } else {
+//                String message = jsonValue.has("message")
+//                        ? jsonValue.get("message").asText()
+//                        : "Error desconocido";
+//
+//                result.setText("Error: " + message);
+//            }
+//        });
+//    }
+//}

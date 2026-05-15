@@ -26,7 +26,8 @@ public class MainLayout extends AppLayout {
                 .set("height", "64px")
                 .set("padding", "0 24px")
                 .set("background", "#101820")
-                .set("box-shadow", "0 2px 10px rgba(0, 0, 0, 0.25)");
+                .set("box-shadow", "0 2px 10px rgba(0, 0, 0, 0.25)")
+                .set("justify-content", "center");
 
         addToNavbar(header);
     }

@@ -34,11 +34,8 @@ public class DominoScanController {
                         true,
                         result.getPoints(),
                         "Imagen procesada",
-                        result.getProcessedImage()
+                        result.getDebugImage()
                 )
         );
     }
-
-
-
 }
